@@ -1,0 +1,34 @@
+Entregable 1: Requisitos Iniciales y Especificaciones Generales												
+"Introducción
+Propósito del documento
+Alcance del sistema
+Definiciones, acrónimos y abreviaciones
+Referencias
+Descripción general del documento
+Descripción general del producto
+Perspectiva del producto
+Funciones del producto (resumen general)
+Características del usuario
+Restricciones generales
+Suposiciones y dependencias
+Análisis preliminar de los requisitos del usuario (requisitos en lenguaje natural)"												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+Entregable 2: Instrumentos de recolección de información y análisis 												
+Workgroup												
+Evaluación heuristica												
+Entrevista												
+Encuesta												
+ETC												
+Análisis de la información												
