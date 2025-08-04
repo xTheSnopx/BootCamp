@@ -1,90 +1,84 @@
+using AutoMapper;
+using Back_end.Context;
+using Business;
 using Business.Implements;
 using Business.Interfaces;
-using Data.Implements;
+using Data;
 using Data.Implements.BaseData;
-using Data.Interfaces;
-using FluentValidation;
+using Data.Interface;
+using Entity.Dtos.PedidoDto;
 using Microsoft.EntityFrameworkCore;
-using Utilities.Mappers.Profiles;
-using Web.ServiceExtension;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add controllers
+// Add services to the container.
 builder.Services.AddControllers();
-builder.Services.AddApplicationServices(builder.Configuration);
-
-builder.Services.AddValidatorsFromAssemblyContaining(typeof(Program));
-
-
-// Swagger
-builder.Services.AddSwaggerDocumentation();
-
-// DbContext
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Register generic repositories and business logic
-builder.Services.AddScoped(typeof(IBaseModelData<>), typeof(BaseModelData<>));
-builder.Services.AddScoped(typeof(IBaseBusiness<,>), typeof(BaseBusiness<,>));
-
-builder.Services.AddScoped<IClienteData, ClienteData>();
-builder.Services.AddScoped<IClienteBusiness, ClienteBusiness>();
-
-builder.Services.AddScoped<IPizzaData, PizzaData>();
-builder.Services.AddScoped<IPizzaBusiness, PizzaBusiness>();
-
-builder.Services.AddScoped<IPedidoData, PedidoData>();
-builder.Services.AddScoped<IPedidoBusiness, PedidoBusiness>();
-
-builder.Services.AddAutoMapper(typeof(PlayersProfile));
-builder.Services.AddAutoMapper(typeof(PizzaProfile));
-builder.Services.AddAutoMapper(typeof(PedidoProfile));
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 
 
+
+
+// AutoMapper: registra todos los perfiles del ensamblado donde están definidos
+builder.Services.AddAutoMapper(typeof(PlayersProfile).Assembly);
+
+// Player
+builder.Services.AddScoped<IPlayerData, PlayerData>();
+builder.Services.AddScoped<IPlayerBusiness, PlayerBusiness>();
+
+// RoomPlayers
+builder.Services.AddScoped<IRoomPlayersData, RoomPlayerData>();
+builder.Services.AddScoped<IRoomPlayersBusiness, RoomPlayersBusiness>();
+
+// Game
+builder.Services.AddScoped<IGameData, GameData>();
+builder.Services.AddScoped<IGameBusiness, GameBusiness>();
+
+// Mazo
+builder.Services.AddScoped<IMazoData, MazoData>();
+builder.Services.AddScoped<IMazoBusiness, MazoBusiness>();
+
+// Card
+builder.Services.AddScoped<ICardData, CardData>();
+builder.Services.AddScoped<ICardBusiness, CardBusiness>();
+
+// Round
+builder.Services.AddScoped<IRoundData, RoundData>();
+builder.Services.AddScoped<IRoundBusiness, RoundBusiness>();
+
+// Turn
+builder.Services.AddScoped<ITurnData, TurnData>();
+builder.Services.AddScoped<ITurnBusiness, TurnBusiness>();
+
+
+
+
+// Agregar CORS
+var OrigenesPermitidos = builder.Configuration.GetValue<string>("OrigenesPermitidos")!.Split(",");
+builder.Services.AddCors(opciones =>
+{
+    opciones.AddDefaultPolicy(politica =>
+    {
+        politica.WithOrigins(OrigenesPermitidos).AllowAnyHeader().AllowAnyMethod();
+    });
+});
+
+// Agregar DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(opciones =>
+    opciones.UseSqlServer("name=DefaultConnection"));
 
 var app = builder.Build();
 
-// Swagger (solo en desarrollo)
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API Sistema de Gestión v1");
-        c.RoutePrefix = string.Empty;
-    });
+    app.UseSwaggerUI();
 }
-
-// Usa la política de CORS registrada en ApplicationServiceExtensions
-app.UseCors("AllowSpecificOrigins");
 
 app.UseHttpsRedirection();
-
-// Autenticación y autorización
-app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
-// Inicializar base de datos y aplicar migraciones
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var dbContext = services.GetRequiredService<ApplicationDbContext>();
-        var logger = services.GetRequiredService<ILogger<Program>>();
-
-        dbContext.Database.Migrate();
-        logger.LogInformation("Base de datos verificada y migraciones aplicadas exitosamente.");
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocurrió un error durante la migración de la base de datos.");
-    }
-}
-
 app.Run();
