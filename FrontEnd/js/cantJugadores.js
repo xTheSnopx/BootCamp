@@ -153,3 +153,54 @@ if (typeof module !== 'undefined' && module.exports) {
     };
 }
 
+
+//conectado a la base de datos 
+  function selectPlayers(count) {
+    document.querySelectorAll('.player-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+
+    const selectedBtn = document.querySelector(`[data-players="${count}"]`);
+    selectedBtn.classList.add('selected');
+    selectedPlayerCount = count;
+
+    // Efecto visual
+    selectedBtn.style.transform = 'scale(1.1)';
+    setTimeout(() => {
+        selectedBtn.style.transform = '';
+    }, 200);
+
+    // Petición al backend
+    const dto = {
+        id: 0,
+        status: true,
+        quantityPlayers: count
+    };
+
+    fetch('http://localhost:7147/api/players', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dto)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Error al registrar jugadores");
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Respuesta del servidor:", data);
+        // Guardar datos en localStorage
+        localStorage.setItem('playersData', JSON.stringify(data));
+        // Mostrar mensaje y botón solo después de éxito
+        updateStatusMessage();
+        showContinueButton();
+    })
+    .catch(error => {
+        console.error("Error al enviar datos:", error);
+        alert("Error al registrar jugadores");
+        resetSelection();
+    });
+}
